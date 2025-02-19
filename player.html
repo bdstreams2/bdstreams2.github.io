@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Stream Player</title>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/clappr/latest/clappr.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/clappr.level-selector/latest/level-selector.min.js"></script>
+</head>
+<body>
+
+    <div id="oper"></div>
+    <div id="vid"></div>
+
+    <script>
+        // Function to get query parameter value from the URL
+        function getUrlParameter(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+
+        // Dynamically build the JSON URL using the 'id' parameter from the query string
+        const id = getUrlParameter('id');  // Get the 'id' from the URL (e.g. id=9912060)
+        const jsonUrl = `https://json.vnres.co/room/${id}/detail.json?v=`;  // Dynamic URL for fetching JSON
+
+        // Fetch the JSON file to get the 'm3u8' source URL
+        fetch(jsonUrl)
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.data && data.data.stream) {
+                    const m3u8Url = data.data.stream.m3u8;  // Extract the 'm3u8' URL from JSON response
+
+                    // Initialize the Clappr player with the m3u8 URL
+                    const player = new Clappr.Player({
+                        source: m3u8Url,  // Set the video source
+                        mimeType: "application/x-mpegURL",  // Specify the MIME type for HLS streams
+                        autoPlay: true,  // Auto-play the video when loaded
+                        height: "310px",  // Set video height
+                        width: "100%",  // Set video width
+                        plugins: { "core": [LevelSelector] },  // Add level selector plugin for quality control
+                        parentId: "#vid"  // The div where the player will be embedded
+                    });
+                } else {
+                    console.error("Stream data not found in the response.");
+                }
+            })
+            .catch(error => {
+                console.error("Error loading JSON or m3u8 stream:", error);
+            });
+    </script>
+
+</body>
+</html>
+  
